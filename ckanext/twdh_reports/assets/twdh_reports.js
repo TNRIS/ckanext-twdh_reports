@@ -64,9 +64,20 @@ ckan.module('twdh_reports', function ($) {
                                 if (!data) return 'Never';
                                 return new Date(data).toLocaleString();
                             }
+                        },
+                        {
+                            targets: 5,
+                            data: "action",
+                            orderable: false,
+                            searchable: false,
+                            render: function(data) {
+                                return data || '<button class="btn btn-sm btn-outline-secondary">Action</button>';
+                            }
                         }
+                        
                     ],
 
+                    
                     // DOM structure
                     dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
                          '<"row"<"col-sm-12 col-md-6"B>>' +
@@ -130,6 +141,7 @@ ckan.module('twdh_reports', function ($) {
                 console.error('Error initializing DataTable:', error);
                 console.error(error.stack);
             }
+            
         },
 
         teardown: function() {
