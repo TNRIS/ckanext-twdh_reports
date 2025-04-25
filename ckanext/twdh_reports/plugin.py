@@ -1,5 +1,6 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+import ckanext.twdh_reports.helpers as h
 
 from ckanext.collection.interfaces import ICollection, CollectionFactory
 
@@ -30,3 +31,8 @@ class TwdhReportsPlugin(plugins.SingletonPlugin):
     # IBlueprint
     def get_blueprint(self):
         return get_blueprint()
+    
+    def get_helpers(self):
+        return {
+            "reset_totp_from_template": h.reset_totp_from_template
+        }
