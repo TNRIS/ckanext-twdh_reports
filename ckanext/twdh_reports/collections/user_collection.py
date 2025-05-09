@@ -18,6 +18,7 @@ class UserSerializer(serialize.JsonSerializer):
 
     def get_columns(self) -> dict[str, Any]:
         return {
+            "name": "Username",
             "fullname": "Full Name",
             "title": "Organization",
             "email": "Email",
@@ -42,6 +43,7 @@ class UserOrganizationRoleData(data.StatementSaData):
 
     statement = (
         sa.select(
+            model.User.name,
             model.User.fullname,
             model.Group.title,
             model.User.email,
@@ -59,7 +61,7 @@ class UserCollection(collection.Collection):
 
     DataFactory = UserOrganizationRoleData
     ColumnsFactory = columns.Columns.with_attributes(
-        names=("fullname", "title", "email", "role", "last_active")
+        names=("name", "fullname", "title", "email", "role", "last_active")
     )
     # FiltersFactory = filters.Filters()
     SerializerFactory = UserSerializer

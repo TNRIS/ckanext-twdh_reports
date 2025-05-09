@@ -32,13 +32,20 @@ ckan.module('twdh_reports', function ($) {
                     columnDefs: [
                         {
                             targets: 0,
-                            data: "fullname",
+                            data: "name",
                             render: function(data) {
                                 return data || 'Not Provided';
                             }
                         },
                         {
                             targets: 1,
+                            data: "fullname",
+                            render: function(data) {
+                                return data || 'Not Provided';
+                            }
+                        },
+                        {
+                            targets: 2,
                             data: "title",
                             render: function(data) {
                   
@@ -46,11 +53,11 @@ ckan.module('twdh_reports', function ($) {
                             }
                         },
                         {
-                            targets: 2,
+                            targets: 3,
                             data: "email"
                         },
                         {
-                            targets: 3,
+                            targets: 4,
                             data: "capacity",
                             render: function(data) {
                               if (!data) return 'Not Provided';
@@ -58,7 +65,7 @@ ckan.module('twdh_reports', function ($) {
                             }
                         },
                         {
-                            targets: 4,
+                            targets: 5,
                             data: "last_active",
                             render: function(data) {
                                 if (!data) return 'Never';
