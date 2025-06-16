@@ -24,7 +24,27 @@ class UserSerializer(serialize.JsonSerializer):
             "email": "Email",
             "role": "Role",
             "last_active": "Last Active",
+            "action": "Action",
         }
+    
+    def dictize_row(self, row):
+        return {
+            "fullname": row[0],
+            "title": row[1],
+            "email": row[2],
+            "role": row[3],
+            "last_active": row[4],
+            "action": f'''
+            <form method="post" style="margin: 0;">
+                <input type="hidden" name="reset_totp_user" value="{row[5]}" />
+                <button type="submit" class="btn btn-sm btn-danger"
+                        onclick="return confirm('Reset MFA for {row[5]}?');">
+                    Reset MFA
+                </button>
+            </form>
+        ''',
+        }
+
 
     # def stream(self):
     #     yield tk.render(
@@ -49,6 +69,7 @@ class UserOrganizationRoleData(data.StatementSaData):
             model.User.email,
             user_membership.c.capacity,
             model.User.last_active,
+             model.User.name,
         )
         .join(user_membership, user_membership.c.table_id == model.User.id)
         .join(model.Group, model.Group.id == user_membership.c.group_id)
@@ -62,7 +83,7 @@ class UserCollection(collection.Collection):
 
     DataFactory = UserOrganizationRoleData
     ColumnsFactory = columns.Columns.with_attributes(
-        names=("name", "fullname", "title", "email", "role", "last_active")
+        names=("name", "fullname", "title", "email", "role", "last_active", "action")
     )
     # FiltersFactory = filters.Filters()
     SerializerFactory = UserSerializer
