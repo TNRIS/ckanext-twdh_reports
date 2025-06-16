@@ -29,16 +29,17 @@ class UserSerializer(serialize.JsonSerializer):
     
     def dictize_row(self, row):
         return {
-            "fullname": row[0],
-            "title": row[1],
-            "email": row[2],
-            "role": row[3],
-            "last_active": row[4],
+            "name": row[0],
+            "fullname": row[1],
+            "title": row[2],
+            "email": row[3],
+            "role": row[4],
+            "last_active": row[5],
             "action": f'''
             <form method="post" style="margin: 0;">
-                <input type="hidden" name="reset_totp_user" value="{row[5]}" />
+                <input type="hidden" name="reset_totp_user" value="{row[6]}" />
                 <button type="submit" class="btn btn-sm btn-danger"
-                        onclick="return confirm('Reset MFA for {row[5]}?');">
+                        onclick="return confirm('Reset MFA for {row[6]}?');">
                     Reset MFA
                 </button>
             </form>

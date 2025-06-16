@@ -58,7 +58,7 @@ ckan.module('twdh_reports', function ($) {
                         },
                         {
                             targets: 4,
-                            data: "capacity",
+                            data: "role",
                             render: function(data) {
                               if (!data) return 'Not Provided';
                               return data.charAt(0).toUpperCase() + data.slice(1).toLowerCase();
@@ -73,7 +73,7 @@ ckan.module('twdh_reports', function ($) {
                             }
                         },
                         {
-                            targets: 5,
+                            targets: 6,
                             data: "action",
                             orderable: false,
                             searchable: false,
