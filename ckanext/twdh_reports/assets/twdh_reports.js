@@ -32,13 +32,20 @@ ckan.module('twdh_reports', function ($) {
                     columnDefs: [
                         {
                             targets: 0,
-                            data: "fullname",
+                            data: "name",
                             render: function(data) {
                                 return data || 'Not Provided';
                             }
                         },
                         {
                             targets: 1,
+                            data: "fullname",
+                            render: function(data) {
+                                return data || 'Not Provided';
+                            }
+                        },
+                        {
+                            targets: 2,
                             data: "title",
                             render: function(data) {
                   
@@ -46,27 +53,38 @@ ckan.module('twdh_reports', function ($) {
                             }
                         },
                         {
-                            targets: 2,
+                            targets: 3,
                             data: "email"
                         },
                         {
-                            targets: 3,
-                            data: "capacity",
+                            targets: 4,
+                            data: "role",
                             render: function(data) {
                               if (!data) return 'Not Provided';
                               return data.charAt(0).toUpperCase() + data.slice(1).toLowerCase();
                             }
                         },
                         {
-                            targets: 4,
+                            targets: 5,
                             data: "last_active",
                             render: function(data) {
                                 if (!data) return 'Never';
                                 return new Date(data).toLocaleString();
                             }
+                        },
+                        {
+                            targets: 6,
+                            data: "action",
+                            orderable: false,
+                            searchable: false,
+                            render: function(data) {
+                                return data || '<button class="btn btn-sm btn-outline-secondary">Action</button>';
+                            }
                         }
+                        
                     ],
 
+                    
                     // DOM structure
                     dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
                          '<"row"<"col-sm-12 col-md-6"B>>' +
@@ -130,6 +148,7 @@ ckan.module('twdh_reports', function ($) {
                 console.error('Error initializing DataTable:', error);
                 console.error(error.stack);
             }
+            
         },
 
         teardown: function() {
