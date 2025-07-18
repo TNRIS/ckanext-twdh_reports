@@ -1,0 +1,38 @@
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Organization</th>
+      <th>Owner</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ds in datasets %}
+    <tr>
+      <td>
+        <a href="/dataset/{{ ds.id }}" target="_blank">
+          {{ ds.title }}
+        </a>
+      </td>
+      <td>{{ ds.organization }}</td>
+      <td>{{ ds.owner }}</td>
+      <td>{{ ds.status }}</td>
+      <td>
+        {% if ds.status == 'Ready to Approve' %}
+        <form method="post" action="{{ h.url_for('twdh_reports.handle_dataset_patch', id=ds.id) }}">
+          <input type="hidden" name="data_admin_approved" value="approved" />
+          <button class="btn btn-warning btn-sm">Approve</button>
+        </form>
+        {% elif ds.status == 'Ready to Publish' %}
+        <form method="post" action="{{ h.url_for('twdh_reports.handle_dataset_patch', id=ds.id) }}">
+          <input type="hidden" name="private" value="False" />
+          <button class="btn btn-success btn-sm">Publish</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
