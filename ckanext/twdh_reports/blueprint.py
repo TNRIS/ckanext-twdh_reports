@@ -134,8 +134,7 @@ def handle_dataset_patch(id):
 
 
 
-#twdh_reports.add_url_rule("/ckan-admin/reports", "reports", reports, methods=["GET", "POST"])
-twdh_reports.add_url_rule("/ckan-admin/reports", "reports", reports)
+twdh_reports.add_url_rule("/ckan-admin/reports", "reports", reports, methods=["GET", "POST"])
 twdh_reports.add_url_rule("/ckan-admin/approval-report", "approval_report", approval_report)
 
 def get_blueprint():
