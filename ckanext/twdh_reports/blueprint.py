@@ -99,6 +99,27 @@ def approval_report():
 
     return render_template("reports/approval.html", datasets=datasets)
 
+def send_editor_approval_notification(user_email: str, user_name: str, dataset_title: str, dataset_url: str):
+    
+    log.info(f"Sending approval notification to Editor: {user_email}")
+    try:
+        subject = "Your Data Resource is Published!"
+        extra_vars = {
+            "user_name": user_name,
+            "dataset_title": dataset_title,
+            "dataset_url": dataset_url,
+            "site_title": tk.config.get('ckan.site_title'),
+            "site_url": tk.config.get('ckan.site_url')
+        }
+
+        body = tk.render("emails/editor_approved.txt", extra_vars)
+        body_html = tk.render("emails/editor_approved.html", extra_vars)
+
+        tk.mail_recipient(user_name, user_email, subject, body, body_html)
+        log.info("Approval notification sent to Editor successfully.")
+    except Exception as e:
+        log.error(f"Failed to send approval notification to Editor: {e}")
+
 @twdh_reports.route('/ckan-admin/approval-report/patch/<id>', methods=['POST'])
 def handle_dataset_patch(id):
     try:
@@ -116,8 +137,6 @@ def handle_dataset_patch(id):
         'id': id
     }
 
-
-
     if 'data_admin_approved' in request.form:
         data['data_admin_approved'] = request.form['data_admin_approved']
         data['private'] = False
@@ -129,6 +148,28 @@ def handle_dataset_patch(id):
         tk.get_action('package_patch')(context, data)
     except logic.ValidationError as e:
         flash(_('Validation Error: {}').format(e.error_summary), 'error')
+
+    try:
+        complete_data = tk.get_action('package_patch')({'allow_state_change': True}, data)
+    except logic.ValidationError as e:
+        return redirect(tk.h.url_for('/ckan-admin/approval-report'))
+    
+    # Send mail to editor
+    try:
+        creator_id = complete_data.get('creator_user_id')
+        if creator_id:
+            creator = tk.get_action('user_show')({}, {'id': creator_id})
+            editor_name = creator.get('fullname') or creator.get('display_name') or creator.get('name', '')
+            editor_email = creator.get('email', '')
+            dataset_url = f"{tk.config.get('ckan.site_url')}/dataset/{complete_data['name']}"
+            send_editor_approval_notification(
+                user_email=editor_email,
+                user_name=editor_name,
+                dataset_title=complete_data.get('title', ''),
+                dataset_url=dataset_url
+            )
+    except Exception as e:
+        log.warning(f"Could not send approval notification to Editor: {e}")
 
     return redirect(tk.h.url_for('/ckan-admin/approval-report'))
 
