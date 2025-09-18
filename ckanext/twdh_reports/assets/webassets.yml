@@ -5,7 +5,7 @@ twdh_reports-js:
     preload:
       - base/main
   contents:
-    - vendor/datatables.js
+    - vendor/datatables-reports.js
     - vendor/datatables.mark.js
     - vendor/mark.js
     - twdh_reports.js
