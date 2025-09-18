@@ -1,14 +1,16 @@
 {% ckan_extends %}
 
 {% block scripts %}
-
-{{ super() }}
-{% asset 'twdh_reports/twdh_reports-js' %}
-
+    {{ super() }}
+    {% if h.check_access('sysadmin') %}
+        {% asset 'twdh_reports/twdh_reports-js' %}
+    {% endif %}
 {% endblock scripts %}
 
 {% block styles %}
-{{ super() }}
-{% asset 'twdh_reports/twdh_reports-css' %}
+    {{ super() }}
+    {% if h.check_access('sysadmin') %}
+        {% asset 'twdh_reports/twdh_reports-css' %}
+    {% endif %}
 {% endblock styles %}
 
