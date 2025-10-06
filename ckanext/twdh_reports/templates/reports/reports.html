@@ -1,6 +1,18 @@
 {% extends "page.html" %}
 
+{% block scripts %}
+    {{ super() }}
+    {% if h.check_access('sysadmin') %}
+        {% asset 'twdh_reports/twdh_reports-js' %}
+    {% endif %}
+{% endblock scripts %}
 
+{% block styles %}
+    {{ super() }}
+    {% if h.check_access('sysadmin') %}
+        {% asset 'twdh_reports/twdh_reports-css' %}
+    {% endif %}
+{% endblock styles %}
 
 {% block content %}
 <div class="container">
