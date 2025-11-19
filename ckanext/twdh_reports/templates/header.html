@@ -1,7 +1,7 @@
 {% ckan_extends %}
 
 {% block report_nav %}
-  {% if c.userobj.sysadmin %}
+  {% if g.userobj.sysadmin %}
   <a href="/ckan-admin/reports" class="dropdown-item" title="{{ _('Activity Report') }}">
     <i class="fa fa-bar-chart" aria-hidden="true"></i>
     <span class="text">{{ _('Activity Report') }}</span>
