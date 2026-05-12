@@ -1,5 +1,5 @@
 twdh_reports-js:
-  filter: rjsmin
+  filters: rjsmin
   output: ckanext-twdh_reports/%(version)s-twdh_reports.js
   extra:
     preload:
@@ -11,7 +11,7 @@ twdh_reports-js:
     - twdh_reports.js
 
 twdh_reports-css:
-  filter: cssrewrite
+  filters: cssrewrite
   output: ckanext-twdh_reports/%(version)s-twdh_reports.css
   contents:
     - vendor/datatables.css
