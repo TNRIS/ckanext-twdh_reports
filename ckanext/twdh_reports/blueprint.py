@@ -17,6 +17,79 @@ log = logging.getLogger(__name__)
 
 twdh_reports = Blueprint("twdh_reports", __name__, template_folder="templates")
 
+def get_user_activity_report_context():
+    collection = shared.get_collection("twdh-users", None)
+
+    reset_username = request.form.get("reset_totp_user")
+    result_message = None
+
+    if reset_username:
+        try:
+            reset_totp(reset_username)
+            result_message = f"TOTP reset successful for {reset_username}"
+        except Exception as e:
+            result_message = f"TOTP reset failed: {str(e)}"
+
+    return {
+        "collection": collection.serializer.serialize() if collection else None,
+        "result_message": result_message,
+    }
+
+def get_dataset_approval_report_context():
+    
+    results = tk.get_action("package_search")
+
+    search_params = {
+        "fq": "+state:active",
+        "include_private": True,
+    }
+
+    base_results = results(
+        {"ignore_auth": True},
+        search_params,
+    )["results"]
+
+    datasets_needing_review = [
+        d for d in base_results
+        if d.get("data_admin_approved", "") != "approved"
+        or d.get("private", True)
+    ]
+
+    datasets = []
+
+    for ds in datasets_needing_review:
+        status = None
+
+        if ds.get("data_admin_approved") != "approved":
+            status = "Ready to Approve"
+        elif ds.get("private") is True and ds.get("data_admin_approved") == "approved":
+            status = "Ready to Publish"
+
+        owner = ""
+
+        creator_user_id = ds.get("creator_user_id")
+        if creator_user_id:
+            try:
+                user_dict = logic.get_action("user_show")(
+                    {"ignore_auth": True},
+                    {"id": creator_user_id},
+                )
+                owner = user_dict.get("name", "")
+            except Exception:
+                owner = ""
+
+        datasets.append({
+            "id": ds["id"],
+            "title": ds.get("title") or ds.get("name"),
+            "organization": ds.get("organization", {}).get("title", ""),
+            "owner": owner,
+            "status": status,
+        })
+
+    return {
+        "datasets": datasets,
+    }
+
 def reports():
     try:
         context = cast(
