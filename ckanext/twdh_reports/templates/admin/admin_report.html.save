@@ -1,0 +1,9 @@
+{% ckan_extends %}
+
+{% block report_toc %}
+
+
+  {{ super() }}
+  <li>User Activity Report</li>
+  <li>Dataset Approval Report</li>
+{% endblock report_toc %}

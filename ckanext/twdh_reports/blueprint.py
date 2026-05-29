@@ -12,10 +12,66 @@ import ckan.model as model
 from ckan.common import _, config, request, current_user
 from ckan.types import Context
 
+import io
+import traceback
+import contextlib
+from ckan.lib.search import check, query_for
+
+
+
 import logging
 log = logging.getLogger(__name__)
 
 twdh_reports = Blueprint("twdh_reports", __name__, template_folder="templates")
+
+
+def get_search_index_report_context():
+
+    package_query = query_for(model.Package)
+
+    pkgs_q = model.Session.query(model.Package).filter_by(
+        state=model.State.ACTIVE)
+    pkgs = {pkg.id for pkg in pkgs_q}
+    indexed_pkgs = set(package_query.get_all_entity_ids(max_results=len(pkgs)))
+    pkgs_not_indexed = pkgs - indexed_pkgs
+    unindexed = []
+    for pkg_id in pkgs_not_indexed:
+        pkg = model.Session.query(model.Package).get(pkg_id)
+        assert pkg
+        unindexed.append(
+            {
+                "modified": pkg.metadata_modified.strftime('%Y-%m-%d'), 
+                "name": pkg.name, 
+                "title": pkg.title
+            }
+        )
+
+
+    return unindexed
+
+    """
+    stdout_buffer = io.StringIO()
+    stderr_buffer = io.StringIO()
+
+    search_index_status = "OK"
+    search_index_error = None
+
+    try:
+        with contextlib.redirect_stdout(stdout_buffer):
+            with contextlib.redirect_stderr(stderr_buffer):
+                _check()
+
+    except Exception:
+        search_index_status = "FAILED"
+        search_index_error = traceback.format_exc()
+
+    return {
+        "search_index_status": search_index_status,
+        "search_index_stdout": stdout_buffer.getvalue() or "(empty)",
+        "search_index_stderr": stderr_buffer.getvalue() or "(empty)",
+        "search_index_error": search_index_error,
+    }
+    """
 
 def get_user_activity_report_context():
     collection = shared.get_collection("twdh-users", None)
@@ -118,6 +174,35 @@ def reports():
 
     return render_template("reports/reports.html", collection=collection.serializer.serialize(),result_message=result_message)
 
+def activity_report():
+    try:
+        context = cast(
+            Context, {
+                "model": model,
+                "user": current_user.name,
+                "auth_user_obj": current_user
+            }
+        )
+        logic.check_access('sysadmin', context)
+
+    except logic.NotAuthorized:
+        base.abort(403, _('Need to be system administrator to administer'))
+
+    collection = shared.get_collection("twdh-users", None)
+
+    reset_username = request.form.get("reset_totp_user")
+    result_message = None
+
+    if reset_username:
+        try:
+            reset_totp(reset_username)
+            result_message = f"TOTP reset successful for {reset_username}"
+        except Exception as e:
+            result_message = f"TOTP reset failed: {str(e)}"
+
+    return render_template("reports/activity.html", collection=collection.serializer.serialize(),result_message=result_message)
+
+
 def approval_report():
     try:
         context = cast(
@@ -193,6 +278,24 @@ def send_editor_approval_notification(user_email: str, user_name: str, dataset_t
     except Exception as e:
         log.error(f"Failed to send approval notification to Editor: {e}")
 
+def search_index():
+    try:
+        context = cast(
+            Context, {
+                "model": model,
+                "user": current_user.name,
+                "auth_user_obj": current_user
+            }
+        )
+        logic.check_access('sysadmin', context)
+
+    except logic.NotAuthorized:
+        base.abort(403, _('Need to be system administrator to administer'))
+
+    pkgs = get_search_index_report_context()
+
+    return render_template("reports/search_index.html", pkgs=pkgs)
+
 @twdh_reports.route('/ckan-admin/approval-report/patch/<id>', methods=['POST'])
 def handle_dataset_patch(id):
     try:
@@ -249,7 +352,9 @@ def handle_dataset_patch(id):
 
 
 twdh_reports.add_url_rule("/ckan-admin/reports", "reports", reports, methods=["GET", "POST"])
+twdh_reports.add_url_rule("/ckan-admin/activity-report", "activity_report", activity_report)
 twdh_reports.add_url_rule("/ckan-admin/approval-report", "approval_report", approval_report)
+twdh_reports.add_url_rule("/ckan-admin/search-index", "search_index", search_index)
 
 def get_blueprint():
     return twdh_reports

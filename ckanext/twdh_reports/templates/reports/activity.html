@@ -15,25 +15,30 @@
 {% endblock styles %}
 
 {% block primary_content_inner %}
-  {% snippet 'reports/approval_table.html', datasets=datasets %}
-{% endblock %}
+
+  {% if result_message %}
+    <script>
+      alert("{{ result_message | escape | replace('\n', ' ') }}");
+    </script>
+  {% endif %}
+  {% snippet 'reports/user_collection.html', collection=collection %}
+ {% endblock %}
 
 {% block secondary_content %}
   <div class="module module-narrow module-shallow">
     <h2 class="module-heading">
-      {{ _('Dataset Approval Report') }}
+      {{ _('User Activity') }}
     </h2>
 
     <div class="module-content">
       {% block admin_report_help %}
         <p>
-            {{ _('Summarizes dataset approval and publishing status so administrators can review pending or incomplete approval workflows.') }}
+          {{ _('Displays user account activity and administrative user actions, including available user management options such as MFA reset.') }}
         </p>
       {% endblock %}
     </div>
 
-    {% snippet 'reports/snippets/other_reports.html', current_report="approval" %}
+  {% snippet 'reports/snippets/other_reports.html', current_report="activity" %}
 
   </div>
 {% endblock %}
-

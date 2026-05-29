@@ -74,7 +74,7 @@ class UserOrganizationRoleData(data.StatementSaData):
         )
         .join(user_membership, user_membership.c.table_id == model.User.id)
         .join(model.Group, model.Group.id == user_membership.c.group_id)
-        .where(model.User.state == "active", model.Group.state == "active")
+        .where(model.User.state == "active", model.Group.state == "active", model.Group.is_organization == True)
     )
     #BEWARE: uncommenting this on breaks datastore_init() in prerun.py in twdh_docker_ckan deployment
     #print(statement)
