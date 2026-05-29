@@ -1,5 +1,6 @@
 {% extends "page.html" %}
 
+
 {% block scripts %}
     {{ super() }}
     {% if h.check_access('sysadmin') %}
@@ -14,48 +15,43 @@
     {% endif %}
 {% endblock styles %}
 
-{% block content %}
-<div class="container">
-  <div class="row">
-    <div class="col-md-12">
-      <h1>{{ _('Reports Dashboard') }}</h1>
-      <p class="lead">{{ _('Access and analyze various reports from this dashboard.') }}</p>
+{% block primary_content_inner %}
 
-      {% if result_message %}
-      <script>
-        alert("{{ result_message | escape | replace('\n', ' ') }}");
-      </script>
-      {% endif %}
-      
+  {% if result_message %}
+    <script>
+      alert("{{ result_message | escape | replace('\n', ' ') }}");
+    </script>
+  {% endif %}
+
+  <dl>
+    {% block report_toc %}
+      <dt><a href="{{ h.url_for('twdh_reports.search_index') }}" title="{{ _('Search Index Report') }}">Search Index</a>
+        <dd>{{ _('Shows whether the CKAN search index check completed successfully, including command output and errors if the check failed.') }}</dd>
+      </dt>
+      <dt><a href="{{ h.url_for('twdh_reports.approval_report') }}" title="{{ _('Dataset Approval Report') }}">Dataset Approval</a>
+        <dd>{{ _('Summarizes dataset approval and publishing status so administrators can review pending or incomplete approval workflows.') }}</dd>
+      </dt>
+      <dt><a href="{{ h.url_for('twdh_reports.activity_report') }}" title="{{ _('User Activity Report') }}">User Activity</a>
+        <dd>{{ _('Displays user account activity and administrative user actions, including available user management options such as MFA reset.') }}</dd>
+      </dt>
+    {% endblock report_toc %}
+  </dl>
+
+{% endblock %}
 
 
+{% block secondary_content %}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      {{ _('Admin Reports') }}
+    </h2>
 
-      <!-- Nav tabs -->
-      <ul class="nav nav-tabs" id="reportTabs" role="tablist">
-        <li class="nav-item">
-          <a class="nav-link active" id="user-tab" data-toggle="tab" href="#userReports" role="tab">
-            {{ _('User Reports') }}
-          </a>
-        </li>
-        <!-- <li class="nav-item">
-            <a class="nav-link" id="dataset-tab" data-toggle="tab" href="#datasetReports" role="tab">
-              {{ _('Dataset Reports') }}
-            </a> -->
-      </ul>
-
-      <!-- Tab content -->
-      <div class="tab-content mt-3">
-        <!-- User Reports Tab -->
-        <div class="tab-pane show active" id="userReports" role="tabpanel">
-          <div class="card">
-            <div class="card-header">
-              <h3 class="card-title">{{ _('User Activity Report') }}</h3>
-            </div>
-            {% snippet 'reports/user_collection.html', collection=collection %}
-          </div>
-        </div>
-      </div>
+    <div class="module-content">
+      {% block admin_report_help %}
+        <p>
+          {{ _('This page provides centralized access to administrative reports for monitoring site health, user activity, and data quality.') }}
+        </p>
+      {% endblock %}
     </div>
   </div>
-</div>
 {% endblock %}

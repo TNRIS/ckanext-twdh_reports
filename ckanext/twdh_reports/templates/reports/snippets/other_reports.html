@@ -1,0 +1,27 @@
+<h2 class="module-heading">
+  {{ _('Other Reports') }}
+</h2>
+
+<div class="module-content">
+  <dl>
+    {% block sidebar_report_toc %}
+      {% if current_report != "search-index" %}
+        <dt><a href="{{ h.url_for('twdh_reports.search_index') }}" title="{{ _('Search Index Report') }}">Search Index</a>
+        </dt>
+      {% endif %}
+      {% if current_report != "approval" %}
+        <dt><a href="{{ h.url_for('twdh_reports.approval_report') }}" title="{{ _('Dataset Approval Report') }}">Dataset Approval</a>
+        </dt>
+      {% endif %}
+      {% if current_report != "activity" %}
+        <dt><a href="{{ h.url_for('twdh_reports.activity_report') }}" title="{{ _('User Activity Report') }}">User Activity</a>
+        </dt>
+      {% endif %}
+      <dt>
+        <dt>
+          <a href="/ckan-admin/reports" title="{{ _('All Reports') }}"><i class="fa fa-bar-chart" aria-hidden="true"></i> All Reports</a>
+        </dt>
+      </dt>
+    {% endblock sidebar_report_toc %}
+</dl>
+</div>

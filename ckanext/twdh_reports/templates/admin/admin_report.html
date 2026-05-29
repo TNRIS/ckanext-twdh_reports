@@ -1,0 +1,57 @@
+{% ckan_extends %}
+
+{% block scripts %}
+  {{ super() }}
+  {% if h.check_access('sysadmin') %}
+    {% asset 'twdh_reports/twdh_reports-js' %}
+  {% endif %}
+{% endblock scripts %}
+
+{% block styles %}
+  {{ super() }}
+  {% if h.check_access('sysadmin') %}
+    {% asset 'twdh_reports/twdh_reports-css' %}
+  {% endif %}
+{% endblock styles %}
+
+{% block user_activity_report %}
+  {{ super() }}
+
+  <section class="module">
+    <div class="module-content">
+
+      <h2>{{ _('User Activity Report') }}</h2>
+      <p class="lead">{{ _('Access and analyze user activity from this report.') }}</p>
+
+      {% if result_message %}
+        <script>
+          alert("{{ result_message | escape | replace('\n', ' ') }}");
+        </script>
+      {% endif %}
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">{{ _('User Activity Report') }}</h3>
+        </div>
+
+        {% snippet 'reports/user_collection.html', collection=collection %}
+      </div>
+
+    </div>
+  </section>
+{% endblock %}
+
+{% block dataset_approval_report %}
+  {{ super() }}
+
+  <section class="module">
+    <div class="module-content">
+
+      <h2>{{ _('Dataset Approval Report') }}</h2>
+      <p class="lead">
+        {{ _('Review dataset approval status and publishing workflow details.') }}
+      </p>
+      {% snippet 'reports/approval_table.html', datasets=datasets %}
+    </div>
+  </section>
+{% endblock %}

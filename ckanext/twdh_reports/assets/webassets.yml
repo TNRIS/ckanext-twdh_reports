@@ -14,5 +14,5 @@ twdh_reports-css:
   filters: cssmin
   output: ckanext-twdh_reports/%(version)s-twdh_reports.css
   contents:
-    - vendor/datatables.css
+    #- vendor/datatables.css
     - vendor/datatables.mark.css
