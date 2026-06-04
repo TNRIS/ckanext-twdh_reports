@@ -352,7 +352,7 @@ def handle_dataset_patch(id):
 
 
 twdh_reports.add_url_rule("/ckan-admin/reports", "reports", reports, methods=["GET", "POST"])
-twdh_reports.add_url_rule("/ckan-admin/activity-report", "activity_report", activity_report)
+twdh_reports.add_url_rule("/ckan-admin/activity-report", "activity_report", activity_report, methods=["GET", "POST"])
 twdh_reports.add_url_rule("/ckan-admin/approval-report", "approval_report", approval_report)
 twdh_reports.add_url_rule("/ckan-admin/search-index", "search_index", search_index)
 
