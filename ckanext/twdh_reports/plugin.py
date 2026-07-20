@@ -31,8 +31,6 @@ class TwdhReportsPlugin(plugins.SingletonPlugin):
     # IBlueprint
     def get_blueprint(self):
         return get_blueprint()
-    
+
     def get_helpers(self):
-        return {
-            "reset_totp_from_template": h.reset_totp_from_template
-        }
+        return {"reset_totp_from_template": h.reset_totp_from_template}

@@ -18,8 +18,8 @@ import contextlib
 from ckan.lib.search import check, query_for
 
 
-
 import logging
+
 log = logging.getLogger(__name__)
 
 twdh_reports = Blueprint("twdh_reports", __name__, template_folder="templates")
@@ -29,8 +29,7 @@ def get_search_index_report_context():
 
     package_query = query_for(model.Package)
 
-    pkgs_q = model.Session.query(model.Package).filter_by(
-        state=model.State.ACTIVE)
+    pkgs_q = model.Session.query(model.Package).filter_by(state=model.State.ACTIVE)
     pkgs = {pkg.id for pkg in pkgs_q}
     indexed_pkgs = set(package_query.get_all_entity_ids(max_results=len(pkgs)))
     pkgs_not_indexed = pkgs - indexed_pkgs
@@ -40,12 +39,11 @@ def get_search_index_report_context():
         assert pkg
         unindexed.append(
             {
-                "modified": pkg.metadata_modified.strftime('%Y-%m-%d'), 
-                "name": pkg.name, 
-                "title": pkg.title
+                "modified": pkg.metadata_modified.strftime("%Y-%m-%d"),
+                "name": pkg.name,
+                "title": pkg.title,
             }
         )
-
 
     return unindexed
 
@@ -73,12 +71,13 @@ def get_search_index_report_context():
     }
     """
 
+
 def get_tags_report_context():
 
     results = {}
 
     try:
-        tags = logic.get_action("tag_list")({},{})
+        tags = logic.get_action("tag_list")({}, {})
         tags.sort()
 
         for tag in tags:
@@ -88,16 +87,17 @@ def get_tags_report_context():
                     "fq": tag,
                     "rows": 1000,
                     "sort": "name desc",
-                    "fl": ["id","name","title"]
-                }
+                    "fl": ["id", "name", "title"],
+                },
             )
-            if( datasets.get('count',0) > 0 ):
-                results[tag] = datasets.get('results',[])
+            if datasets.get("count", 0) > 0:
+                results[tag] = datasets.get("results", [])
 
     except Exception as e:
-        base.abort(500, e )
+        base.abort(500, e)
 
     return results
+
 
 def get_user_activity_report_context():
     collection = shared.get_collection("twdh-users", None)
@@ -117,8 +117,9 @@ def get_user_activity_report_context():
         "result_message": result_message,
     }
 
+
 def get_dataset_approval_report_context():
-    
+
     results = tk.get_action("package_search")
 
     search_params = {
@@ -132,9 +133,9 @@ def get_dataset_approval_report_context():
     )["results"]
 
     datasets_needing_review = [
-        d for d in base_results
-        if d.get("data_admin_approved", "") != "approved"
-        or d.get("private", True)
+        d
+        for d in base_results
+        if d.get("data_admin_approved", "") != "approved" or d.get("private", True)
     ]
 
     datasets = []
@@ -160,31 +161,31 @@ def get_dataset_approval_report_context():
             except Exception:
                 owner = ""
 
-        datasets.append({
-            "id": ds["id"],
-            "title": ds.get("title") or ds.get("name"),
-            "organization": ds.get("organization", {}).get("title", ""),
-            "owner": owner,
-            "status": status,
-        })
+        datasets.append(
+            {
+                "id": ds["id"],
+                "title": ds.get("title") or ds.get("name"),
+                "organization": ds.get("organization", {}).get("title", ""),
+                "owner": owner,
+                "status": status,
+            }
+        )
 
     return {
         "datasets": datasets,
     }
 
+
 def reports():
     try:
         context = cast(
-            Context, {
-                "model": model,
-                "user": current_user.name,
-                "auth_user_obj": current_user
-            }
+            Context,
+            {"model": model, "user": current_user.name, "auth_user_obj": current_user},
         )
-        logic.check_access(u'sysadmin', context)
+        logic.check_access("sysadmin", context)
 
     except logic.NotAuthorized:
-        base.abort(403, _(u'Need to be system administrator to administer'))
+        base.abort(403, _("Need to be system administrator to administer"))
 
     collection = shared.get_collection("twdh-users", None)
 
@@ -198,21 +199,23 @@ def reports():
         except Exception as e:
             result_message = f"TOTP reset failed: {str(e)}"
 
-    return render_template("reports/reports.html", collection=collection.serializer.serialize(),result_message=result_message)
+    return render_template(
+        "reports/reports.html",
+        collection=collection.serializer.serialize(),
+        result_message=result_message,
+    )
+
 
 def activity_report():
     try:
         context = cast(
-            Context, {
-                "model": model,
-                "user": current_user.name,
-                "auth_user_obj": current_user
-            }
+            Context,
+            {"model": model, "user": current_user.name, "auth_user_obj": current_user},
         )
-        logic.check_access('sysadmin', context)
+        logic.check_access("sysadmin", context)
 
     except logic.NotAuthorized:
-        base.abort(403, _('Need to be system administrator to administer'))
+        base.abort(403, _("Need to be system administrator to administer"))
 
     collection = shared.get_collection("twdh-users", None)
 
@@ -226,65 +229,68 @@ def activity_report():
         except Exception as e:
             result_message = f"TOTP reset failed: {str(e)}"
 
-    return render_template("reports/activity.html", collection=collection.serializer.serialize(),result_message=result_message)
+    return render_template(
+        "reports/activity.html",
+        collection=collection.serializer.serialize(),
+        result_message=result_message,
+    )
 
 
 def approval_report():
     try:
         context = cast(
-            Context, {
-                "model": model,
-                "user": current_user.name,
-                "auth_user_obj": current_user
-            }
+            Context,
+            {"model": model, "user": current_user.name, "auth_user_obj": current_user},
         )
-        logic.check_access('sysadmin', context)
+        logic.check_access("sysadmin", context)
 
     except logic.NotAuthorized:
-        base.abort(403, _('Need to be system administrator to administer'))
+        base.abort(403, _("Need to be system administrator to administer"))
 
     # Fetch datasets needing approval/publishing
-    results = tk.get_action('package_search')
+    results = tk.get_action("package_search")
 
     search_params = {
-            'fq': '+state:active',
-            'include_private': True,
-        }
-    base_results = results(
-            {'ignore_auth': True},
-            search_params
-        )['results']
-    
+        "fq": "+state:active",
+        "include_private": True,
+    }
+    base_results = results({"ignore_auth": True}, search_params)["results"]
+
     datasets_needing_review = [
-    d for d in base_results
-    if d.get('data_admin_approved', '') != 'approved' or d.get('private', True)
-]
+        d
+        for d in base_results
+        if d.get("data_admin_approved", "") != "approved" or d.get("private", True)
+    ]
 
     datasets = []
     for ds in datasets_needing_review:
         status = None
-        if ds.get('data_admin_approved') != 'approved':
-            status = 'Ready to Approve'
-        elif ds.get('private') is True and ds.get('data_admin_approved') == 'approved':
-            status = 'Ready to Publish'
-        
-        user_dict = logic.get_action('user_show')(
-            {'ignore_auth': True},
-            {'id': ds['creator_user_id']}
+        if ds.get("data_admin_approved") != "approved":
+            status = "Ready to Approve"
+        elif ds.get("private") is True and ds.get("data_admin_approved") == "approved":
+            status = "Ready to Publish"
+
+        user_dict = logic.get_action("user_show")(
+            {"ignore_auth": True}, {"id": ds["creator_user_id"]}
         )
         # if status:
-        datasets.append({
-                'id': ds['id'],
-                'title': ds.get('title', ds['name']),
-                'organization': ds.get('organization', {}).get('title', ''),
-                'owner': user_dict['name'],
-                'status': status
-            })
+        datasets.append(
+            {
+                "id": ds["id"],
+                "title": ds.get("title", ds["name"]),
+                "organization": ds.get("organization", {}).get("title", ""),
+                "owner": user_dict["name"],
+                "status": status,
+            }
+        )
 
     return render_template("reports/approval.html", datasets=datasets)
 
-def send_editor_approval_notification(user_email: str, user_name: str, dataset_title: str, dataset_url: str):
-    
+
+def send_editor_approval_notification(
+    user_email: str, user_name: str, dataset_title: str, dataset_url: str
+):
+
     log.info(f"Sending approval notification to Editor: {user_email}")
     try:
         subject = "Your Data Resource is Published!"
@@ -292,8 +298,8 @@ def send_editor_approval_notification(user_email: str, user_name: str, dataset_t
             "user_name": user_name,
             "dataset_title": dataset_title,
             "dataset_url": dataset_url,
-            "site_title": tk.config.get('ckan.site_title'),
-            "site_url": tk.config.get('ckan.site_url')
+            "site_title": tk.config.get("ckan.site_title"),
+            "site_url": tk.config.get("ckan.site_url"),
         }
 
         body = tk.render("emails/editor_approved.txt", extra_vars)
@@ -304,102 +310,114 @@ def send_editor_approval_notification(user_email: str, user_name: str, dataset_t
     except Exception as e:
         log.error(f"Failed to send approval notification to Editor: {e}")
 
+
 def tags_report():
     try:
         context = cast(
-            Context, {
-                "model": model,
-                "user": current_user.name,
-                "auth_user_obj": current_user
-            }
+            Context,
+            {"model": model, "user": current_user.name, "auth_user_obj": current_user},
         )
-        logic.check_access('sysadmin', context)
+        logic.check_access("sysadmin", context)
 
     except logic.NotAuthorized:
-        base.abort(403, _('Need to be system administrator to administer'))
+        base.abort(403, _("Need to be system administrator to administer"))
 
     tags = get_tags_report_context()
 
     return render_template("reports/tags_report.html", tags=tags)
 
+
 def search_index():
     try:
         context = cast(
-            Context, {
-                "model": model,
-                "user": current_user.name,
-                "auth_user_obj": current_user
-            }
+            Context,
+            {"model": model, "user": current_user.name, "auth_user_obj": current_user},
         )
-        logic.check_access('sysadmin', context)
+        logic.check_access("sysadmin", context)
 
     except logic.NotAuthorized:
-        base.abort(403, _('Need to be system administrator to administer'))
+        base.abort(403, _("Need to be system administrator to administer"))
 
     pkgs = get_search_index_report_context()
 
     return render_template("reports/search_index.html", pkgs=pkgs)
 
-@twdh_reports.route('/ckan-admin/approval-report/patch/<id>', methods=['POST'])
+
+@twdh_reports.route("/ckan-admin/approval-report/patch/<id>", methods=["POST"])
 def handle_dataset_patch(id):
     try:
         context = {
-            'model': model,
-            'session': model.Session,
-            'user': current_user.name,
-            'auth_user_obj': current_user
+            "model": model,
+            "session": model.Session,
+            "user": current_user.name,
+            "auth_user_obj": current_user,
         }
-        logic.check_access('sysadmin', context)
+        logic.check_access("sysadmin", context)
     except logic.NotAuthorized:
-        base.abort(403, _('Only system administrators can perform this action'))
+        base.abort(403, _("Only system administrators can perform this action"))
 
-    data = {
-        'id': id
-    }
+    data = {"id": id}
 
-    if 'data_admin_approved' in request.form:
-        data['data_admin_approved'] = request.form['data_admin_approved']
-        data['private'] = False
+    if "data_admin_approved" in request.form:
+        data["data_admin_approved"] = request.form["data_admin_approved"]
+        data["private"] = False
 
-    if 'private' in request.form:
-        data['private'] = request.form['private']
+    if "private" in request.form:
+        data["private"] = request.form["private"]
 
     try:
-        tk.get_action('package_patch')(context, data)
+        tk.get_action("package_patch")(context, data)
     except logic.ValidationError as e:
-        flash(_('Validation Error: {}').format(e.error_summary), 'error')
+        flash(_("Validation Error: {}").format(e.error_summary), "error")
 
     try:
-        complete_data = tk.get_action('package_patch')({'allow_state_change': True}, data)
+        complete_data = tk.get_action("package_patch")(
+            {"allow_state_change": True}, data
+        )
     except logic.ValidationError as e:
-        return redirect(tk.h.url_for('/ckan-admin/approval-report'))
-    
+        return redirect(tk.h.url_for("/ckan-admin/approval-report"))
+
     # Send mail to editor
     try:
-        creator_id = complete_data.get('creator_user_id')
+        creator_id = complete_data.get("creator_user_id")
         if creator_id:
-            creator = tk.get_action('user_show')({}, {'id': creator_id})
-            editor_name = creator.get('fullname') or creator.get('display_name') or creator.get('name', '')
-            editor_email = creator.get('email', '')
-            dataset_url = f"{tk.config.get('ckan.site_url')}/dataset/{complete_data['name']}"
+            creator = tk.get_action("user_show")({}, {"id": creator_id})
+            editor_name = (
+                creator.get("fullname")
+                or creator.get("display_name")
+                or creator.get("name", "")
+            )
+            editor_email = creator.get("email", "")
+            dataset_url = (
+                f"{tk.config.get('ckan.site_url')}/dataset/{complete_data['name']}"
+            )
             send_editor_approval_notification(
                 user_email=editor_email,
                 user_name=editor_name,
-                dataset_title=complete_data.get('title', ''),
-                dataset_url=dataset_url
+                dataset_title=complete_data.get("title", ""),
+                dataset_url=dataset_url,
             )
     except Exception as e:
         log.warning(f"Could not send approval notification to Editor: {e}")
 
-    return redirect(tk.h.url_for('/ckan-admin/approval-report'))
+    return redirect(tk.h.url_for("/ckan-admin/approval-report"))
 
 
-
-twdh_reports.add_url_rule("/ckan-admin/reports", "reports", reports, methods=["GET", "POST"])
-twdh_reports.add_url_rule("/ckan-admin/activity-report", "activity_report", activity_report, methods=["GET", "POST"])
+twdh_reports.add_url_rule(
+    "/ckan-admin/reports", "reports", reports, methods=["GET", "POST"]
+)
+twdh_reports.add_url_rule(
+    "/ckan-admin/activity-report",
+    "activity_report",
+    activity_report,
+    methods=["GET", "POST"],
+)
 twdh_reports.add_url_rule("/ckan-admin/tags-report", "tags_report", tags_report)
-twdh_reports.add_url_rule("/ckan-admin/approval-report", "approval_report", approval_report)
+twdh_reports.add_url_rule(
+    "/ckan-admin/approval-report", "approval_report", approval_report
+)
 twdh_reports.add_url_rule("/ckan-admin/search-index", "search_index", search_index)
+
 
 def get_blueprint():
     return twdh_reports

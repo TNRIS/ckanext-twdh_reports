@@ -26,7 +26,7 @@ class UserSerializer(serialize.JsonSerializer):
             "last_active": "Last Active",
             "action": "Action",
         }
-    
+
     def dictize_row(self, row):
         return {
             "name": row[0],
@@ -35,7 +35,7 @@ class UserSerializer(serialize.JsonSerializer):
             "email": row[3],
             "role": row[4],
             "last_active": row[5],
-            "action": f'''
+            "action": f"""
             <form method="post" style="margin: 0;">
                 <input type="hidden" name="reset_totp_user" value="{row[6]}" />
                 <button type="submit" class="btn btn-sm btn-danger"
@@ -43,9 +43,8 @@ class UserSerializer(serialize.JsonSerializer):
                     Reset MFA
                 </button>
             </form>
-        ''',
+            """,
         }
-
 
     # def stream(self):
     #     yield tk.render(
@@ -70,14 +69,18 @@ class UserOrganizationRoleData(data.StatementSaData):
             model.User.email,
             user_membership.c.capacity,
             model.User.last_active,
-             model.User.name,
+            model.User.name,
         )
         .join(user_membership, user_membership.c.table_id == model.User.id)
         .join(model.Group, model.Group.id == user_membership.c.group_id)
-        .where(model.User.state == "active", model.Group.state == "active", model.Group.is_organization == True)
+        .where(
+            model.User.state == "active",
+            model.Group.state == "active",
+            model.Group.is_organization == True,
+        )
     )
-    #BEWARE: uncommenting this on breaks datastore_init() in prerun.py in twdh_docker_ckan deployment
-    #print(statement)
+    # BEWARE: uncommenting this on breaks datastore_init() in prerun.py in twdh_docker_ckan deployment
+    # print(statement)
 
 
 class UserCollection(collection.Collection):
