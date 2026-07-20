@@ -1,0 +1,57 @@
+{% extends "page.html" %}
+
+{% block scripts %}
+    {{ super() }}
+    {% if h.check_access('sysadmin') %}
+        {% asset 'twdh_reports/twdh_reports-js' %}
+    {% endif %}
+{% endblock scripts %}
+
+{% block styles %}
+    {{ super() }}
+    {% if h.check_access('sysadmin') %}
+        {% asset 'twdh_reports/twdh_reports-css' %}
+    {% endif %}
+{% endblock styles %}
+
+{% block primary_content_inner %}
+    
+  <h3>Tags Report</h3>
+
+  <ul>
+    {% for tag in tags %}
+      <li><a href="/dataset/?tags={{ tag }}">{{ tag }}</a>
+        <ul>
+        {% set datasets = tags.get(tag) %}
+        {% for dataset in datasets %}
+        <li>
+          <a href="/dataset/{{ dataset.get('name') }}">{{ dataset.get('title') }}</a>
+        </li>
+        {% endfor %}
+        </ul>
+
+      </li>
+    {% endfor %}
+  </ul>
+
+{% endblock %}
+
+
+{% block secondary_content %}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      {{ _('Tags Report') }}
+    </h2>
+
+    <div class="module-content">
+      {% block admin_report_help %}
+        <p>
+          {{ _('Lists all active tags and associated datasets.') }}
+        </p>
+      {% endblock %}
+    </div>
+
+    {% snippet 'reports/snippets/other_reports.html', current_report="tags" %}
+
+  </div>
+{% endblock %}

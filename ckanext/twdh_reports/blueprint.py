@@ -73,6 +73,32 @@ def get_search_index_report_context():
     }
     """
 
+def get_tags_report_context():
+
+    results = {}
+
+    try:
+        tags = logic.get_action("tag_list")({},{})
+        tags.sort()
+
+        for tag in tags:
+            datasets = logic.get_action("package_search")(
+                {},
+                {
+                    "fq": tag,
+                    "rows": 1000,
+                    "sort": "name desc",
+                    "fl": ["id","name","title"]
+                }
+            )
+            if( datasets.get('count',0) > 0 ):
+                results[tag] = datasets.get('results',[])
+
+    except Exception as e:
+        base.abort(500, e )
+
+    return results
+
 def get_user_activity_report_context():
     collection = shared.get_collection("twdh-users", None)
 
@@ -278,6 +304,24 @@ def send_editor_approval_notification(user_email: str, user_name: str, dataset_t
     except Exception as e:
         log.error(f"Failed to send approval notification to Editor: {e}")
 
+def tags_report():
+    try:
+        context = cast(
+            Context, {
+                "model": model,
+                "user": current_user.name,
+                "auth_user_obj": current_user
+            }
+        )
+        logic.check_access('sysadmin', context)
+
+    except logic.NotAuthorized:
+        base.abort(403, _('Need to be system administrator to administer'))
+
+    tags = get_tags_report_context()
+
+    return render_template("reports/tags_report.html", tags=tags)
+
 def search_index():
     try:
         context = cast(
@@ -353,6 +397,7 @@ def handle_dataset_patch(id):
 
 twdh_reports.add_url_rule("/ckan-admin/reports", "reports", reports, methods=["GET", "POST"])
 twdh_reports.add_url_rule("/ckan-admin/activity-report", "activity_report", activity_report, methods=["GET", "POST"])
+twdh_reports.add_url_rule("/ckan-admin/tags-report", "tags_report", tags_report)
 twdh_reports.add_url_rule("/ckan-admin/approval-report", "approval_report", approval_report)
 twdh_reports.add_url_rule("/ckan-admin/search-index", "search_index", search_index)
 
