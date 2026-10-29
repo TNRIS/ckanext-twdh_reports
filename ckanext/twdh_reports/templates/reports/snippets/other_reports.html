@@ -17,6 +17,10 @@
         <dt><a href="{{ h.url_for('twdh_reports.activity_report') }}" title="{{ _('User Activity Report') }}">User Activity</a>
         </dt>
       {% endif %}
+      {% if current_report != "resource-size" %}
+        <dt><a href="{{ h.url_for('twdh_reports.resource_size_report') }}">Resource Size</a>
+        </dt>
+      {% endif %}
       <dt>
         <dt>
           <a href="/ckan-admin/reports" title="{{ _('All Reports') }}"><i class="fa fa-bar-chart" aria-hidden="true"></i> All Reports</a>

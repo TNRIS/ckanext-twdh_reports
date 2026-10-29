@@ -16,7 +16,7 @@ import io
 import traceback
 import contextlib
 from ckan.lib.search import check, query_for
-
+from ckanext.datastore import helpers as datastore_helpers
 
 
 import logging
@@ -296,6 +296,227 @@ def search_index():
 
     return render_template("reports/search_index.html", pkgs=pkgs)
 
+def resource_size_report():
+    """
+    Report resource sizes and DataStore column counts.
+
+    """
+
+    context = cast(
+        Context,
+        {
+            "model": model,
+            "user": current_user.name,
+            "auth_user_obj": current_user,
+        }
+    )
+
+    try:
+        logic.check_access("sysadmin", context)
+    except logic.NotAuthorized:
+        base.abort(
+            403,
+            _("Need to be system administrator to administer")
+        )
+
+    max_file_size = int(
+        config.get(
+            "ckan.resource_proxy.max_file_size",
+            1048576
+        )
+    )
+
+    max_columns = int(
+        config.get("ckan.max_resource_columns", 40)
+    )
+
+    # Summary
+    summary = {
+        "total": 0,
+        "within_limit": 0,
+        "too_large": 0,
+        "unknown": 0,
+        "too_many_columns": 0,
+        "unknown_columns": 0,
+        "issues": 0,
+    }
+
+    resource_rows = []
+
+    datasets = tk.get_action(
+        "current_package_list_with_resources"
+    )(
+        {
+            "user": current_user.name,
+            "ignore_auth": True
+        },
+        {
+            "limit": 100000
+        }
+    )
+
+    for dataset in datasets:
+
+        if dataset.get("type") != "dataset":
+            continue
+
+        for resource in dataset.get("resources", []):
+
+            summary["total"] += 1
+
+            # ----------------------------------
+            # Resource size
+            # ----------------------------------
+
+            size = resource.get("size")
+            size_bytes = None
+
+            try:
+                if size is not None and size != "":
+                    size_bytes = int(size)
+
+                    if size_bytes < 0:
+                        size_bytes = None
+
+            except (ValueError, TypeError):
+                size_bytes = None
+
+            if size_bytes is None:
+
+                size_status = "Unknown"
+                size_display = "Unknown"
+
+                summary["unknown"] += 1
+
+            elif size_bytes > max_file_size:
+
+                size_status = "Too Large"
+                size_display = "{:.2f} MiB".format(
+                    size_bytes / (1024 * 1024)
+                )
+
+                summary["too_large"] += 1
+
+            else:
+
+                size_status = "Within Limit"
+                size_display = "{:.2f} MiB".format(
+                    size_bytes / (1024 * 1024)
+                )
+
+                summary["within_limit"] += 1
+
+            # ----------------------------------
+            # DataStore column count
+            # ----------------------------------
+
+            column_count = None
+            column_status = "N/A"
+
+            resource_views = []
+
+            if resource.get("datastore_active", False):
+                try:
+                    resource_views = tk.get_action("resource_view_list")(
+                        {
+                            "user": current_user.name,
+                            "ignore_auth": True
+                        },
+                        {"id": resource["id"]}
+                    )
+                except Exception:
+                    log.exception(
+                        "Failed to retrieve views for resource %s",
+                        resource["id"]
+        )
+
+            has_table_view = any(
+                view.get("view_type") == "datatablesview_plus"
+                for view in resource_views
+            )
+
+            
+            if resource.get("datastore_active", False) and has_table_view:
+
+                try:
+                    data_dictionary = (
+                        datastore_helpers.datastore_dictionary(
+                            resource["id"]
+                        )
+                    )
+
+                    column_count = len(data_dictionary)
+
+                    if column_count > max_columns:
+
+                        column_status = "Too Many"
+                        summary["too_many_columns"] += 1
+
+                    else:
+                        column_status = "OK"
+
+                except Exception:
+
+                    column_status = "Unknown"
+                    summary["unknown_columns"] += 1
+
+                    log.exception(
+                        "Could not retrieve DataStore columns "
+                        "for resource %s",
+                        resource.get("id")
+                    )
+
+            # ----------------------------------
+            # Overall status
+            # ----------------------------------
+
+            has_issue = (
+                size_status in ("Too Large", "Unknown")
+                or column_status in ("Too Many", "Unknown")
+            )
+
+            if has_issue:
+                summary["issues"] += 1
+
+            # ----------------------------------
+            # Resource details
+            # ----------------------------------
+            if has_issue:
+                resource_rows.append({
+                    "dataset": (
+                        dataset.get("title")
+                        or dataset.get("name")
+                    ),
+                    "dataset_name": dataset.get("name"),
+                    "resource": (
+                        resource.get("name")
+                    ),
+                    "resource_id": resource.get("id"),
+                    "format": resource.get("format") or "Unknown",
+                    "size_bytes": size_bytes,
+                    "size_display": size_display,
+                    "size_status": size_status,
+                    "column_count": column_count,
+                    "column_status": column_status,
+                    "has_issue": has_issue,
+                })
+
+    resource_rows.sort(
+        key=lambda row: (
+            not row["has_issue"],
+            row["dataset"].lower(),
+            row["resource"].lower()
+        )
+    )
+
+    return render_template(
+        "reports/resource_size.html",
+        resources=resource_rows,
+        summary=summary,
+        max_file_size=max_file_size,
+        max_columns=max_columns,
+    )
+
 @twdh_reports.route('/ckan-admin/approval-report/patch/<id>', methods=['POST'])
 def handle_dataset_patch(id):
     try:
@@ -355,6 +576,7 @@ twdh_reports.add_url_rule("/ckan-admin/reports", "reports", reports, methods=["G
 twdh_reports.add_url_rule("/ckan-admin/activity-report", "activity_report", activity_report)
 twdh_reports.add_url_rule("/ckan-admin/approval-report", "approval_report", approval_report)
 twdh_reports.add_url_rule("/ckan-admin/search-index", "search_index", search_index)
+twdh_reports.add_url_rule("/ckan-admin/resource-size-report","resource_size_report",resource_size_report)
 
 def get_blueprint():
     return twdh_reports

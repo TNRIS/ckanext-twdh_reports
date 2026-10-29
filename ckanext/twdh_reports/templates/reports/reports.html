@@ -34,6 +34,9 @@
       <dt><a href="{{ h.url_for('twdh_reports.activity_report') }}" title="{{ _('User Activity Report') }}">User Activity</a>
         <dd>{{ _('Displays user account activity and administrative user actions, including available user management options such as MFA reset.') }}</dd>
       </dt>
+      <dt><a href="{{ h.url_for('twdh_reports.resource_size_report') }}" title="{{ _('Resource Size Report') }}">Resource Size Report</a>
+        <dd>{{ _('Lists all dataset resources with their stored file sizes and DataStore column counts. Highlights resources exceeding configured limits or having unknown sizes.') }}</dd>
+      </dt>
     {% endblock report_toc %}
   </dl>
 
