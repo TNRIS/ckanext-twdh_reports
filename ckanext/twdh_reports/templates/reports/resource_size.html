@@ -1,0 +1,196 @@
+{% extends "page.html" %}
+
+{% block primary_content_inner %}
+
+  <h2>{{ _('Resource Size Report') }}</h2>
+
+  <p>
+    {{ _('Lists resource sizes and DataStore column counts, highlighting resources that exceed configured limits or have unknown values.') }}
+  </p>
+
+  <p>
+    <strong>Maximum File Size:</strong>
+    {{ "%.2f"|format(max_file_size / (1024 * 1024)) }} MiB
+    <br>
+    <strong>Maximum Columns:</strong>
+    {{ max_columns }}
+  </p>
+
+  <h3>{{ _('Summary') }}</h3>
+
+  <table class="table table-bordered table-striped">
+    <tbody>
+      <tr>
+        <th>Total Resources</th>
+        <td>{{ summary.total }}</td>
+      </tr>
+      <tr>
+        <th>Within Size Limit</th>
+        <td>{{ summary.within_limit }}</td>
+      </tr>
+      <tr>
+        <th>Too Large</th>
+        <td>{{ summary.too_large }}</td>
+      </tr>
+      <tr>
+        <th>Unknown Size</th>
+        <td>{{ summary.unknown }}</td>
+      </tr>
+      <tr>
+        <th>Too Many Columns</th>
+        <td>{{ summary.too_many_columns }}</td>
+      </tr>
+      <tr>
+        <th>Unknown Column Count</th>
+        <td>{{ summary.unknown_columns }}</td>
+      </tr>
+      <tr>
+        <th>Resources With Issues</th>
+        <td>{{ summary.issues }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>{{ _('Resources With Issues') }}</h3>
+
+  <div class="table-responsive">
+
+    <table class="table table-striped table-bordered">
+
+      <thead>
+        <tr>
+          <th>Dataset</th>
+          <th>Format</th>
+          <th>Size</th>
+          <th>Size Status</th>
+          <th>Columns</th>
+          <th>Column Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for resource in resources %}
+
+          <tr>
+            <td>
+              {% if resource.dataset_name %}
+                <a href="{{ h.url_for('dataset.read', id=resource.dataset_name) }}">
+                  {{ resource.dataset }}
+                </a>
+              {% else %}
+                {{ resource.dataset }}
+              {% endif %}
+            </td>
+
+            <td>{{ resource.format }}</td>
+
+            <td>{{ resource.size_display }}</td>
+
+            <td>
+              {% if resource.size_status == "Too Large" %}
+                <span class="text-danger">
+                  <strong>Too Large</strong>
+                </span>
+              {% elif resource.size_status == "Unknown" %}
+                <span class="text-warning">
+                  <strong>Unknown</strong>
+                </span>
+              {% else %}
+                <span class="text-success">
+                  Within Limit
+                </span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if resource.column_count is not none %}
+                {{ resource.column_count }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+
+            <td>
+              {% if resource.column_status == "Too Many" %}
+                <span class="text-danger">
+                  <strong>Too Many</strong>
+                </span>
+              {% elif resource.column_status == "Unknown" %}
+                <span class="text-warning">
+                  <strong>Unknown</strong>
+                </span>
+              {% elif resource.column_status == "OK" %}
+                <span class="text-success">
+                  OK
+                </span>
+              {% else %}
+                N/A
+              {% endif %}
+            </td>
+
+          </tr>
+
+        {% else %}
+
+          <tr>
+            <td colspan="7" class="text-center">
+              {{ _('No resources found.') }}
+            </td>
+          </tr>
+
+        {% endfor %}
+      </tbody>
+
+    </table>
+
+  </div>
+
+{% endblock primary_content_inner %}
+
+
+{% block secondary_content %}
+
+  <div class="module module-narrow module-shallow">
+
+    <h2 class="module-heading">
+      {{ _('Resource Size Report') }}
+    </h2>
+
+    <div class="module-content">
+
+      {% block admin_report_help %}
+
+        <p>
+          {{ _('Displays resource sizes and DataStore column counts, highlighting resources that exceed the configured limits.') }}
+        </p>
+
+        <p>
+          <strong>{{ _('Too Large:') }}</strong>
+          {{ _('Resource size exceeds the configured maximum file size.') }}
+        </p>
+
+        <p>
+          <strong>{{ _('Unknown:') }}</strong>
+          {{ _('Resource size or column count could not be determined.') }}
+        </p>
+
+        <p>
+          <strong>{{ _('Too Many Columns:') }}</strong>
+          {{ _('The DataStore column count exceeds the configured maximum.') }}
+        </p>
+
+        <p>
+          <strong>{{ _('N/A:') }}</strong>
+          {{ _('Column count is not applicable because the resource is not DataStore-enabled.') }}
+        </p>
+
+      {% endblock %}
+
+    </div>
+
+    {% snippet 'reports/snippets/other_reports.html',
+       current_report="resource-size" %}
+
+  </div>
+
+{% endblock secondary_content %}
