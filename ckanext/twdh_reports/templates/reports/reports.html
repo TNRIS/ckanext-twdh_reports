@@ -25,6 +25,12 @@
 
   <dl>
     {% block report_toc %}
+      <dt><a href="/stats" title="{{ _('Statistics') }}">Basic Stats</a>
+        <dd>{{ _('CKAN core statistics') }}</dd>
+      </dt>
+      <dt><a href="/better_stats/dashboard" title="{{ _('Better Statistics') }}">Better Stats</a>
+        <dd>{{ _('Statistics as reported by the "Better Stats" extension.') }}</dd>
+      </dt>
       <dt><a href="{{ h.url_for('twdh_reports.search_index') }}" title="{{ _('Search Index Report') }}">Search Index</a>
         <dd>{{ _('Shows whether the CKAN search index check completed successfully, including command output and errors if the check failed.') }}</dd>
       </dt>
